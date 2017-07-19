@@ -14,7 +14,7 @@ verifier:
 
 platforms:
   - name: ubuntu-16.04
-  #- name: centos-7
+  - name: centos-7.3
 
 suites:
   - name: smoke-default
@@ -44,4 +44,15 @@ suites:
     attributes:
       kubernetes-stack:
         gcloud:
+          enabled: true
+
+  - name: smoke-helm
+    run_list:
+      - recipe[kubernetes-stack-test::helm_install_default]
+    verifier:
+      inspec_tests:
+        - test/smoke/helm
+    attributes:
+      kubernetes-stack:
+        helm:
           enabled: true

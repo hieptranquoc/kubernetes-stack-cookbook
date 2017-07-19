@@ -27,18 +27,27 @@
 require 'spec_helper'
 
 describe 'kubernetes-stack-test::kubectl_install_default' do
-  before do
-    stub_command('which kubectl').and_return('/usr/local/bin/kubectl')
+  context 'When all attributes are default, on ubuntu 16.04' do
+    let(:chef_run) { ChefSpec::SoloRunner.new(step_into: 'kubectl', platform: 'ubuntu', version: '16.04').converge(described_recipe) }
+
+    before do
+      stub_command("which kubectl").and_return(true)
+    end
+
+    it 'converges successfully' do
+      expect { chef_run }.to_not raise_error
+    end
+
+    it 'install kubectl' do
+      expect(chef_run).to install_kubectl('install default kubectl')
+    end
   end
 
-  context 'When all attributes are default, on ubuntu 16.04' do
-    let(:chef_run) do
-      runner = ChefSpec::SoloRunner.new(
-        step_into: 'kubectl',
-        platform: 'ubuntu',
-        version: '16.04'
-      )
-      runner.converge(described_recipe)
+  context 'When all attributes are default, on centos 7.3' do
+    let(:chef_run) { ChefSpec::SoloRunner.new(step_into: 'kubectl', platform: 'centos', version: '7.3.1611').converge(described_recipe) }
+
+    before do
+      stub_command("which kubectl").and_return(true)
     end
 
     it 'converges successfully' do

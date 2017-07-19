@@ -20,10 +20,10 @@ platforms:
     intermediate_instructions:
       - RUN /usr/bin/apt-get update
       - RUN /usr/bin/apt-get -y install curl
-# - name: centos-7
-#   driver:
-#     image: centos:7
-#     platform: rhel
-    # pid_one_command: /usr/lib/systemd/systemd
-    # intermediate_instructions:
-    #   - RUN yum -y install lsof which net-tools
+- name: centos-7
+  driver:
+    image: centos:7
+    privileged: true
+    pid_one_command: /usr/lib/systemd/systemd
+    intermediate_instructions:
+      - RUN yum -y install lsof which net-tools
