@@ -15,48 +15,24 @@ services: docker
 
 env:
   matrix:
-  - INSTANCE=smoke-default-ubuntu-1604
-  - INSTANCE=smoke-default-centos-7
-  #kubectl instance
-  - INSTANCE=smoke-kubectl-default-ubuntu-1604
-  - INSTANCE=smoke-kubectl-default-centos-7
-  - INSTANCE=smoke-kubectl-ubuntu-1604
-  - INSTANCE=smoke-kubectl-centos-7
-  - INSTANCE=smoke-kubectl-specific-version-ubuntu-1604
-  - INSTANCE=smoke-kubectl-specific-version-centos-7
-  - INSTANCE=smoke-kubectl-uninstall-ubuntu-1604
-  - INSTANCE=smoke-kubectl-uninstall-centos-7
-  #helm instance
-  - INSTANCE=smoke-helm-default-ubuntu-1604
-  - INSTANCE=smoke-helm-default-centos-7
-  - INSTANCE=smoke-helm-ubuntu-1604
-  - INSTANCE=smoke-helm-centos-7
-  - INSTANCE=smoke-helm-specific-version-ubuntu-1604
-  - INSTANCE=smoke-helm-specific-version-centos-7
-  - INSTANCE=smoke-helm-uninstall-ubuntu-1604
-  - INSTANCE=smoke-helm-uninstall-centos-7
-  #gcloud instance
-  - INSTANCE=smoke-gcloud-default-ubuntu-1604
-  - INSTANCE=smoke-gcloud-default-centos-7
-  - INSTANCE=smoke-gcloud-ubuntu-1604
-  - INSTANCE=smoke-gcloud-centos-7
-  - INSTANCE=smoke-gcloud-specific-version-ubuntu-1604
-  - INSTANCE=smoke-gcloud-specific-version-centos-7
-  - INSTANCE=smoke-gcloud-uninstall-ubuntu-1604
-  - INSTANCE=smoke-gcloud-uninstall-centos-7
+    - INSTANCE=smoke-install-default-ubuntu-1604
+    - INSTANCE=smoke-install-default-centos-7
+    - INSTANCE=smoke-install-specific-version-ubuntu-1604
+    - INSTANCE=smoke-install-specific-version-centos-7
+    - INSTANCE=smoke-uninstall-ubuntu-1604
+    - INSTANCE=smoke-uninstall-centos-7
 
 # Ensure we make ChefDK's Ruby the default
 before_script:
   - sudo iptables -L DOCKER || ( echo "DOCKER iptables chain missing" ; sudo iptables -N DOCKER )
   - eval "$(/opt/chefdk/bin/chef shell-init bash)"
   - chef gem install kitchen-dokken
+  - eval "$(/opt/chefdk/bin/chef shell-init bash)"
 
 script: KITCHEN_LOCAL_YAML=.kitchen.dokken.yml /opt/chefdk/embedded/bin/kitchen verify ${INSTANCE}
 
 matrix:
   include:
-    - before_script:
-      - eval "$(/opt/chefdk/bin/chef shell-init bash)"
     - script:
       - /opt/chefdk/embedded/bin/chef --version
       - /opt/chefdk/embedded/bin/cookstyle --version

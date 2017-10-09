@@ -9,11 +9,6 @@ load_current_value do
 end
 
 action :install do
-  platform_cmd = Mixlib::ShellOut.new('uname')
-  platform_cmd.run_command
-  platform_cmd.error!
-  platform = platform_cmd.stdout.strip.downcase
-
   version = new_resource.version
 
   arch_cmd = Mixlib::ShellOut.new('uname -m')
@@ -61,39 +56,16 @@ action :install do
       only_if 'which helm'
     end
 
-    download_url = "https://storage.googleapis.com/kubernetes-helm/helm-#{version}-#{platform}-#{arch}.tar.gz"
+    download_url = "https://storage.googleapis.com/kubernetes-helm/helm-#{version}-linux-#{arch}.tar.gz"
 
     bash 'install helm' do
       code <<-EOH
         curl #{download_url} | tar -xvz
-        mv #{platform}-#{arch}/helm #{binary_path}
+        mv linux-#{arch}/helm #{binary_path}
         EOH
     end
 
-    # Check bash-completion is installed
-    if platform?('ubuntu')
-      bash 'check exist and install bash-completion' do
-        code <<-EOH
-          apt-get install bash-completion
-          . /etc/bash_completion
-          EOH
-        not_if { ::File.exist?('/etc/bash_completion') && ::File.exist?('/usr/share/bash-completion/bash_completion') }
-      end
-    end
-
-    if platform?('centos')
-      execute 'check exist and install bash-completion' do
-        command 'yum install -y bash-completion'
-        not_if { ::File.exist?('/etc/profile.d/bash_completion.sh') && ::File.exist?('/usr/share/bash-completion/bash_completion') }
-      end
-
-      bash 'add it to the bash profile' do
-        code <<-EOH
-          source /etc/profile.d/bash_completion.sh
-          EOH
-        only_if { node['platform_version'].to_f > 7.0 }
-      end
-    end
+    package 'bash-completion'
 
     # Delete helm autocomplete if existing
     execute 'delete helm autocomplete' do

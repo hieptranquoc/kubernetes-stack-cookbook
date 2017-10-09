@@ -1,1 +1,0 @@
-gcloud 'install default gcloud'

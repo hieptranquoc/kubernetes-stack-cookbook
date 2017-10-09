@@ -1,6 +1,6 @@
 #
 # Cookbook:: kubernetes-stack
-# Spec:: kubectl
+# Spec:: helm
 #
 # The MIT License (MIT)
 #
@@ -26,38 +26,58 @@
 
 require 'spec_helper'
 
-describe 'kubernetes-stack-test::kubectl_install_default' do
-  context 'When all attributes are default, on ubuntu 16.04' do
-    let(:chef_run) { ChefSpec::SoloRunner.new(step_into: 'kubectl', platform: 'ubuntu', version: '16.04').converge(described_recipe) }
+describe 'kubernetes-stack-test::install_helm_for_chefspec' do
+  context 'Install on ubuntu 16.04' do
+    cached(:chef_run) do
+      ChefSpec::ServerRunner.new(
+        step_into: 'helm',
+        platform: 'ubuntu',
+        version: '16.04'
+      ).converge(described_recipe)
+    end
 
     before do
-      stub_command('which kubectl').and_return('/usr/local/bin/kubectl')
-      stub_command('test -f /etc/bash_completion.d/kubectl').and_return(true)
+      stub_command('which helm').and_return('/usr/local/bin/helm')
+      stub_command('test -f /etc/bash_completion.d/helm').and_return(true)
     end
 
     it 'converges successfully' do
       expect { chef_run }.to_not raise_error
     end
 
-    it 'install kubectl' do
-      expect(chef_run).to install_kubectl('install default kubectl')
+    it 'install latest helm' do
+      expect(chef_run).to install_helm('install latest helm')
+    end
+
+    it 'install specific helm version' do
+      expect(chef_run).to install_helm('install specific helm version').with(version: 'v2.4.2')
     end
   end
 
-  context 'When all attributes are default, on centos 7.3' do
-    let(:chef_run) { ChefSpec::SoloRunner.new(step_into: 'kubectl', platform: 'centos', version: '7.3.1611').converge(described_recipe) }
+  context 'Install on centos 7.3' do
+    cached(:chef_run) do
+      ChefSpec::ServerRunner.new(
+        step_into: 'helm',
+        platform: 'centos',
+        version: '7.3.1611'
+      ).converge(described_recipe)
+    end
 
     before do
-      stub_command('which kubectl').and_return('/usr/local/bin/kubectl')
-      stub_command('test -f /etc/bash_completion.d/kubectl').and_return(true)
+      stub_command('which helm').and_return('/usr/local/bin/helm')
+      stub_command('test -f /etc/bash_completion.d/helm').and_return(true)
     end
 
     it 'converges successfully' do
       expect { chef_run }.to_not raise_error
     end
 
-    it 'install kubectl' do
-      expect(chef_run).to install_kubectl('install default kubectl')
+    it 'install latest helm' do
+      expect(chef_run).to install_helm('install latest helm')
+    end
+
+    it 'install specific helm version' do
+      expect(chef_run).to install_helm('install specific helm version').with(version: 'v2.4.2')
     end
   end
 end
