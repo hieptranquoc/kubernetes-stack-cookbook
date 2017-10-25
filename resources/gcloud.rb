@@ -17,6 +17,11 @@ action :install do
     # Deleting previous version if mismatched
     delete_gcloud(binary_path) unless existing_version.empty?
 
+    arch_cmd = Mixlib::ShellOut.new('uname -m')
+    arch_cmd.run_command
+    arch_cmd.error!
+    arch = arch_cmd.stdout.strip
+
     install_requirement
 
     install_path = '/usr/lib'
@@ -54,7 +59,7 @@ action :install do
 
     # Gcloud version will be installed via file downloaded
     else
-      download_url = "https://storage.googleapis.com/cloud-sdk-release/google-cloud-sdk-#{version}-linux-`uname -m`.tar.gz"
+      download_url = "https://storage.googleapis.com/cloud-sdk-release/google-cloud-sdk-#{version}-linux-#{arch} -m`.tar.gz"
 
       execute "curl #{download_url} | tar xvz" do
         cwd install_path
