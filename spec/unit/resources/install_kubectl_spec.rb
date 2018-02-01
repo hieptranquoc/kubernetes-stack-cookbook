@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 #
 # Cookbook:: kubernetes-stack
 # Spec:: kubectl
@@ -29,7 +30,7 @@ require 'spec_helper'
 describe 'kubernetes-stack-test::install_kubectl_for_chefspec' do
   context 'Install on ubuntu 16.04' do
     cached(:chef_run) do
-      ChefSpec::ServerRunner.new(
+      ChefSpec::SoloRunner.new(
         step_into: 'kubectl',
         platform: 'ubuntu',
         version: '16.04'
@@ -45,18 +46,14 @@ describe 'kubernetes-stack-test::install_kubectl_for_chefspec' do
       expect { chef_run }.to_not raise_error
     end
 
-    it 'install latest kubectl' do
-      expect(chef_run).to install_kubectl('install latest kubectl')
-    end
-
-    it 'install specific kubectl version' do
-      expect(chef_run).to install_kubectl('install specific kubectl version').with(version: 'v1.7.0')
+    it 'install kubectl' do
+      expect(chef_run).to install_kubectl('install kubectl').with(version: 'v1.9.1')
     end
   end
 
   context 'Install on centos 7.3' do
     cached(:chef_run) do
-      ChefSpec::ServerRunner.new(
+      ChefSpec::SoloRunner.new(
         step_into: 'kubectl',
         platform: 'centos',
         version: '7.3.1611'
@@ -72,12 +69,8 @@ describe 'kubernetes-stack-test::install_kubectl_for_chefspec' do
       expect { chef_run }.to_not raise_error
     end
 
-    it 'install latest kubectl' do
-      expect(chef_run).to install_kubectl('install latest kubectl')
-    end
-
-    it 'install specific kubectl version' do
-      expect(chef_run).to install_kubectl('install specific kubectl version').with(version: 'v1.7.0')
+    it 'install kubectl' do
+      expect(chef_run).to install_kubectl('install kubectl').with(version: 'v1.9.1')
     end
   end
 end

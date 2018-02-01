@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 name 'kubernetes-stack'
 maintainer 'Teracy Corporation'
 maintainer_email 'hq@teracy.com'
@@ -22,3 +23,6 @@ chef_version '>= 12.5' if respond_to?(:chef_version)
 
 supports 'ubuntu'
 supports 'centos'
+
+depends 'docker'
+gem 'docker-api', '= 1.34.0'

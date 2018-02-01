@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 #
 # Cookbook:: kubernetes-stack
 # Spec:: kubectl
@@ -29,7 +30,7 @@ require 'spec_helper'
 describe 'kubernetes-stack-test::install_gcloud_for_chefspec' do
   context 'install on ubuntu 16.04' do
     cached(:chef_run) do
-      ChefSpec::ServerRunner.new(
+      ChefSpec::SoloRunner.new(
         step_into: 'gcloud',
         platform: 'ubuntu',
         version: '16.04'
@@ -51,18 +52,14 @@ describe 'kubernetes-stack-test::install_gcloud_for_chefspec' do
       expect { chef_run }.to_not raise_error
     end
 
-    it 'install latest gcloud' do
-      expect(chef_run).to install_gcloud('install latest gcloud')
-    end
-
-    it 'install specific gcloud version' do
-      expect(chef_run).to install_gcloud('install specific gcloud version').with(version: '158.0.0')
+    it 'install gcloud' do
+      expect(chef_run).to install_gcloud('install gcloud').with(version: '197.0.0')
     end
   end
 
   context 'Install on centos 7.3' do
     cached(:chef_run) do
-      ChefSpec::ServerRunner.new(
+      ChefSpec::SoloRunner.new(
         step_into: 'gcloud',
         platform: 'centos',
         version: '7.3.1611'
@@ -84,12 +81,8 @@ describe 'kubernetes-stack-test::install_gcloud_for_chefspec' do
       expect { chef_run }.to_not raise_error
     end
 
-    it 'install latest gcloud' do
-      expect(chef_run).to install_gcloud('install latest gcloud')
-    end
-
-    it 'install specific gcloud version' do
-      expect(chef_run).to install_gcloud('install specific gcloud version').with(version: '158.0.0')
+    it 'install gcloud' do
+      expect(chef_run).to install_gcloud('install gcloud').with(version: '197.0.0')
     end
   end
 end

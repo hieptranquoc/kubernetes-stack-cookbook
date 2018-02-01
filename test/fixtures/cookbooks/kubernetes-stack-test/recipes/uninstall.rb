@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 #
 # Cookbook:: kubernetes-stack-test
 # Recipe:: uninstall
@@ -6,14 +7,18 @@
 
 include_recipe 'kubernetes-stack-test::install'
 
-gcloud 'uninstall gcloud' do
-  action :remove
-end
-
 kubectl 'uninstall kubectl' do
   action :remove
 end
 
+gcloud 'uninstall gcloud' do
+  action :remove
+end
+
 helm 'uninstall helm' do
+  action :remove
+end
+
+minikube 'uninstall minikube' do
   action :remove
 end

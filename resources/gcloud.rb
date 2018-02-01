@@ -1,7 +1,8 @@
+# frozen_string_literal: true
 resource_name :gcloud
 
 property :version, String, default: ''
-property :binary_path, String, default: '/usr/local/bin/gcloud'
+property :path, String, default: '/usr/local/bin'
 
 default_action :install
 
@@ -9,133 +10,92 @@ load_current_value do
 end
 
 action :install do
-  version = latest_version()
-  version = new_resource.version unless new_resource.version.empty?
-  existing_version = existing_version()
+  version = new_resource.version
+  version = latest_ver if new_resource.version.empty?
 
-  if existing_version != version
+  Chef::Log.info("gcloud install version = '#{version}'")
+
+  current = current_ver
+
+  Chef::Log.info("gcloud current version = '#{current}'")
+
+  if current != version
     # Deleting previous version if mismatched
-    delete_gcloud(binary_path) unless existing_version.empty?
+    delete_gcloud unless current.nil?
 
-    arch_cmd = Mixlib::ShellOut.new('uname -m')
-    arch_cmd.run_command
-    arch_cmd.error!
-    arch = arch_cmd.stdout.strip
+    directory new_resource.path do
+      action :create
+      not_if { Dir.exist?(new_resource.path) }
+      mode 0755
+      notifies :write, "log[create #{new_resource.path} directory]", :immediately
+    end
+
+    log "create #{new_resource.path} directory" do
+      level :info
+      action :nothing
+    end
 
     install_requirement
 
-    install_path = '/usr/lib'
-
-    install_root_dir = "#{install_path}/google-cloud-sdk"
-
     if platform?('ubuntu')
       version_avaiable = version_avaiable_in_apt_package(version)
-    end
 
-    # Gcloud version will be installed via apt-get
-    if version_avaiable
-      if platform?('ubuntu')
-        execute 'import google-cloud-sdk public key' do
-          command 'curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -'
-        end
+      version = latest_ver unless version_avaiable
 
-        apt_repository 'google-cloud-sdk' do
-          uri          'http://packages.cloud.google.com/apt'
-          distribution "cloud-sdk-#{node['lsb']['codename']}"
-          components   ['main']
-          # key 'A7317B0F'
-          # keyserver 'packages.cloud.google.com/apt/doc/apt-key.gpg'
-        end
-
-        package 'google-cloud-sdk' do
-          version "#{version}-0"
-        end
+      execute 'import google-cloud-sdk public key' do
+        command 'curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -'
       end
 
-      # Link to binary_path
-      link_to_path(binary_path, install_root_dir)
-      # Disable update notification when run command 'gcloud version'
-      disable_update_check(install_root_dir)
+      apt_repository 'google-cloud-sdk' do
+        uri          'http://packages.cloud.google.com/apt'
+        distribution "cloud-sdk-#{node['lsb']['codename']}"
+        components   ['main']
+        # key 'A7317B0F'
+        # keyserver 'packages.cloud.google.com/apt/doc/apt-key.gpg'
+      end
 
-    # Gcloud version will be installed via file downloaded
+      apt_package 'google-cloud-sdk' do
+        version "#{version}-0"
+        action :install
+      end
+    elsif platform?('centos')
+      version_avaiable = version_avaiable_in_yum_package(version)
+
+      version = latest_ver unless version_avaiable
+
+      yum_repository 'google-cloud-sdk' do
+        description 'google-cloud-sdk'
+        baseurl 'https://packages.cloud.google.com/yum/repos/cloud-sdk-el7-x86_64'
+        enabled true
+        gpgcheck true
+        repo_gpgcheck true
+        gpgkey [
+          'https://packages.cloud.google.com/yum/doc/yum-key.gpg',
+          'https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg',
+        ]
+      end
+
+      yum_package 'google-cloud-sdk' do
+        version version
+        action :install
+      end
     else
-      download_url = "https://storage.googleapis.com/cloud-sdk-release/google-cloud-sdk-#{version}-linux-#{arch} -m`.tar.gz"
+      raise 'platform not support'
+    end
 
-      execute "curl #{download_url} | tar xvz" do
-        cwd install_path
-        action :run
-        not_if 'which gcloud'
+    gcloud_dir = gcloud_installation_dir
+
+    log "installation root dir : #{gcloud_dir}" do
+      level :info
+      not_if { gcloud_dir.empty? }
+    end
+
+    %w(gcloud gsutil bq).each do |gc|
+      link "#{new_resource.path}/#{gc}" do
+        to "#{gcloud_dir}/bin/#{gc}"
       end
-
-      execute './google-cloud-sdk/install.sh --quiet' do
-        cwd install_path
-        action :run
-        only_if "test -d #{install_root_dir}"
-      end
-
-      # Link to binary_path
-      link_to_path(binary_path, install_root_dir)
-      # Disable update notification when run command 'gcloud version'
-      disable_update_check(install_root_dir)
-      # Install autocomplete
-      install_autocomplete(install_root_dir)
-    end
-  end
-end
-
-action :remove do
-  delete_gcloud(binary_path)
-end
-
-action_class do
-  def latest_version
-    latest_version_url = "curl -s https://cloud.google.com/sdk/docs/release-notes | grep 'h2' | head -1 | cut -d '>' -f2 | sed 's/[[:space:]].*//'"
-    latest_version_cmd = Mixlib::ShellOut.new(latest_version_url)
-    latest_version_cmd.run_command
-
-    latest_version = ''
-    latest_version = latest_version_cmd.stdout.strip if latest_version_cmd.stderr.empty? && !latest_version_cmd.stdout.empty?
-    latest_version
-  end
-
-  def existing_version
-    existing_version_cmd = Mixlib::ShellOut.new("gcloud version | head -1 | grep -o -E '[0-9].*'")
-    existing_version_cmd.run_command
-
-    existing_version = ''
-    existing_version = existing_version_cmd.stdout.strip if existing_version_cmd.stderr.empty? && !existing_version_cmd.stdout.empty?
-    existing_version
-  end
-
-  def version_avaiable_in_apt_package(version)
-    version_avaiable_cmd = Mixlib::ShellOut.new("curl -s https://packages.cloud.google.com/apt/dists/cloud-sdk-$(lsb_release -c -s)/main/binary-amd64/Packages | grep 'google-cloud-sdk_#{version}'")
-    version_avaiable_cmd.run_command
-
-    version_avaiable = false
-    version_avaiable = true if version_avaiable_cmd.stderr.empty? && !version_avaiable_cmd.stdout.empty?
-    version_avaiable
-  end
-
-  def link_to_path(binary_path, install_root_dir)
-    link binary_path do
-      to "#{install_root_dir}/bin/gcloud"
-      only_if "test -f #{install_root_dir}/bin/gcloud"
     end
 
-    # Add gsutil to ENV_PATH
-    link '/usr/local/bin/gsutil' do
-      to "#{install_root_dir}/bin/gsutil"
-      only_if "test -f #{install_root_dir}/bin/gsutil"
-    end
-
-    # Add bq command to ENV_PATH
-    link '/usr/local/bin/bq' do
-      to "#{install_root_dir}/bin/bq"
-      only_if "test -f #{install_root_dir}/bin/bq"
-    end
-  end
-
-  def disable_update_check(install_root_dir)
     # Disable update notification when run command 'gcloud version'
     execute 'disable update check' do
       command 'gcloud config set --installation component_manager/disable_update_check true'
@@ -143,72 +103,184 @@ action_class do
 
     # Update file config.json
     execute 'update gcloud file config' do
-      command "sed -i -- 's/\"disable_updater\": false/\"disable_updater\": true/g' #{install_root_dir}/lib/googlecloudsdk/core/config.json"
+      command "sed -i -- 's/\"disable_updater\": false/\"disable_updater\": true/g' #{gcloud_dir}/lib/googlecloudsdk/core/config.json"
     end
+
+    package 'bash-completion' do
+      action :install
+      notifies :write, 'log[install bash-completion]', :immediately
+      not_if { Dir.exist?('/etc/bash_completion.d') }
+    end
+
+    log 'install bash-completion' do
+      level :info
+      action :nothing
+    end
+
+    remote_file 'install autocomplete' do
+      path '/etc/bash_completion.d/gcloud'
+      source "file://#{gcloud_dir}/completion.bash.inc"
+      mode '0755'
+    end
+
+    link gcloud_completion_path do
+      to "#{gcloud_dir}/completion.bash.inc"
+      mode '0755'
+    end
+
+    ruby_block 'check gcloud autocompletion' do
+      block do
+        if ::File.exist?(gcloud_completion_path)
+          log 'gcloud autocomplete has installed' do
+            level :info
+          end
+        else
+          log 'gcloud autocomplete has not installed' do
+            level :error
+          end
+        end
+      end
+      action :run
+    end
+  else
+    log 'no need to install new gcloud version' do
+      level :info
+    end
+  end
+end
+
+action :remove do
+  delete_gcloud
+end
+
+action_class do
+  def sys
+    node['kubernetes-stack']['sys']
+  end
+
+  def binary_path
+    "#{new_resource.path}/gcloud"
+  end
+
+  def gcloud_installation_dir
+    return '/usr/lib64/google-cloud-sdk' if node['platform'] == 'centos'
+    '/usr/lib/google-cloud-sdk'
+  end
+
+  def gcloud_completion_path
+    '/etc/bash_completion.d/gcloud'
+  end
+
+  def latest_ver
+    cmd = Mixlib::ShellOut.new("curl -s https://cloud.google.com/sdk/docs/release-notes | grep 'h2' | head -1 | cut -d '>' -f2 | sed 's/[[:space:]].*//'")
+    cmd.run_command
+
+    ver = cmd.stderr.empty? && !cmd.stdout.empty? ? cmd.stdout.strip : nil
+    ver
+  end
+
+  def current_ver
+    cmd = Mixlib::ShellOut.new("gcloud version | head -1 | grep -o -E '[0-9].*'")
+    cmd.run_command
+
+    ver = cmd.stderr.empty? && !cmd.stdout.empty? ? cmd.stdout.strip : nil
+    ver
+  end
+
+  def version_avaiable_in_apt_package(version)
+    cmd = Mixlib::ShellOut.new("curl -s https://packages.cloud.google.com/apt/dists/cloud-sdk-$(lsb_release -c -s)/main/binary-amd64/Packages | grep 'google-cloud-sdk_#{version}'")
+    cmd.run_command
+
+    version_avaiable = cmd.stderr.empty? && !cmd.stdout.empty? ? true : false
+    version_avaiable
+  end
+
+  def version_avaiable_in_yum_package(version)
+    cmd = Mixlib::ShellOut.new("curl -s https://packages.cloud.google.com/yum/repos/cloud-sdk-el7-x86_64/repodata/other.xml | grep 'google-cloud-sdk_#{version}'")
+    cmd.run_command
+
+    version_avaiable = cmd.stderr.empty? && !cmd.stdout.empty? ? true : false
+    version_avaiable
   end
 
   def install_requirement
-    case node[:platform]
-    when 'ubuntu'
-      package %w(bash-completion python python-pip apt-transport-https)
-    when 'centos'
-      package %w(bash-completion python)
-      execute 'download pip' do
-        command "curl 'https://bootstrap.pypa.io/get-pip.py' -o 'get-pip.py'"
+    if platform?('ubuntu')
+      package %w(gcc python-dev python-setuptools python-pip lsb-release apt-transport-https openssh-client)
+    end
+
+    if platform?('centos')
+      package %w(gcc python python-setuptools)
+
+      remote_file 'get python pip' do
+        path "#{Chef::Config[:file_cache_path]}/get-pip.py"
+        source 'https://bootstrap.pypa.io/get-pip.py'
+        mode '0755'
+        action :create
       end
 
       execute 'install pip' do
+        cwd Chef::Config[:file_cache_path]
         command 'python get-pip.py'
-      end
-    end
-
-    execute 'install crc-mod' do
-      command 'pip install -U crcmod'
-    end
-  end
-
-  def install_autocomplete(install_root_dir)
-    remote_file 'install autocomplete' do
-      path '/etc/bash_completion.d/gcloud'
-      source "file://#{install_root_dir}/completion.bash.inc"
-      mode '0755'
-    end
-
-    link '/etc/bash_completion.d/gcloud' do
-      to "#{install_root_dir}/completion.bash.inc"
-      mode '0755'
-    end
-  end
-
-  def delete_gcloud(binary_path)
-    if platform?('ubuntu')
-      execute 'to complete remove gcloud' do
-        command 'apt-get purge --auto-remove -y google-cloud-sdk'
         action :run
       end
     end
 
-    file 'cleanup_binany_path' do
-      path binary_path
-      action :delete
+    execute 'install crc-mod' do
+      cwd '/tmp'
+      command 'pip install -U crcmod'
+      action :run
+    end
+  end
+
+  def delete_gcloud
+    bash 'remove config directory' do
+      user 'root'
+      code <<-EOH
+        config_dir=$(gcloud info --format='value(config.paths.global_config_dir)');
+        rm -rf $config_dir
+        EOH
+      notifies :write, 'log[config directory has deleted successfull]', :immediately
       only_if 'which gcloud'
     end
 
-    directory 'cleanup_config_path' do
-      path '~/.config/gcloud'
-      recursive true
-      action :delete
-      only_if 'test -d ~/.config/gcloud'
+    log 'config directory has deleted successfull' do
+      level :info
+      action :nothing
     end
 
-    directory 'cleanup_install_root_dir' do
-      path '/usr/lib/google-cloud-sdk'
-      recursive true
-      action :delete
-      only_if 'test -d /usr/lib/google-cloud-sdk'
+    bash 'remove installation directory' do
+      user 'root'
+      code <<-EOH
+        installation_dir=$(gcloud info --format='value(installation.sdk_root)');
+        rm -rf $installation_dir
+        EOH
+      notifies :write, 'log[installation directory has deleted successfull]', :immediately
+      only_if 'which gcloud'
     end
 
-    file 'cleanup_completion_path' do
+    log 'installation directory has deleted successfull' do
+      level :info
+      action :nothing
+    end
+
+    %w(gcloud gsutil bq).each do |gc|
+      bash "remove #{gc} binary path" do
+        user 'root'
+        code <<-EOH
+          #{gc}_binary=$(which #{gc});
+          rm -rf $#{gc}_binary
+          EOH
+        notifies :write, "log[#{gc} has deleted successfull]", :immediately
+        only_if { ::File.exist?("#{new_resource.path}/#{gc}") }
+      end
+
+      log "#{gc} has deleted successfull" do
+        level :info
+        action :nothing
+      end
+    end
+
+    file gcloud_completion_path do
       path '/etc/bash_completion.d/gcloud'
       action :delete
       only_if 'test -f /etc/bash_completion.d/gcloud'
