@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 if defined?(ChefSpec)
   def install_kubectl(message)
     ChefSpec::Matchers::ResourceMatcher.new(:kubectl, :install, message)
@@ -9,5 +10,9 @@ if defined?(ChefSpec)
 
   def install_gcloud(message)
     ChefSpec::Matchers::ResourceMatcher.new(:gcloud, :install, message)
+  end
+
+  def install_minikube(message)
+    ChefSpec::Matchers::ResourceMatcher.new(:minikube, :install, message)
   end
 end

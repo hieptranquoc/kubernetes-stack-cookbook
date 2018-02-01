@@ -15,30 +15,51 @@ Kubernetes stack cookbook to work with Kubernetes: https://supermarket.chef.io/c
 
 - `kubectl`: support all centos-7 and ubuntu-16.04 versions.
 - `helm`: support all centos-7 and ubuntu-16.04 versions.
-- `gcloud`: support all centos-7 and ubuntu-16.04 versions. Should use version avaiable in https://packages.cloud.google.com/apt/ (with ubuntu platform) for faster autocomplete.
+- `gcloud`: support all centos-7 and ubuntu-16.04 versions.
+- `minikube`: support all centos-7 and ubuntu-16.04 versions.
+
+## Cookbook
+
+- kubernetes-stack
+- docker
+
+## Requirement
+
+- docker must be installed in machine
 
 ## How to use
 
-- Add `depends 'kubernetes-stack'` to your cookbook's metadata.rb.
+- Add `depends 'kubernetes-stack'` to `metadata.rb` file.
 - Use the resources shipped in cookbook in a recipe :
 
 ```ruby
 kubectl 'install kubectl' do
   action [:install, :remove]
-  version '' #application version (if empty, default: latest)
-  binary_path '' #application path (if empty, default: /usr/local/bin/kubectl)
+  version '' # application version (if empty, default: latest)
+  path '' # application path (if empty, default: /usr/local/bin)
 end
 
 gcloud 'install gcloud' do
   action [:install, :remove]
-  version '' #application version (if empty, default: latest)
-  binary_path '' #application path (if empty, default: /usr/local/bin/gcloud)
+  version '' # application version (if empty, default: latest)
+  path '' # application path (if empty, default: /usr/local/bin)
 end
 
 helm 'install helm' do
   action [:install, :remove]
-  version '' #application version (if empty, default: latest)
-  binary_path '' #application path (if empty, default: /usr/local/bin/helm)
+  version '' # application version (if empty, default: latest)
+  path '' # application path (if empty, default: /usr/local/bin)
+end
+
+minikube 'install minikube' do
+  action [:install, :run, :remove]
+  version '' # application version (if empty, default: latest)
+  path '' # application path (if empty, default: /usr/local/bin)
+  k8s_version '' # kubernetes_version (if empty, default: latest)
+  network_plugin '' # network plugin use in minikube
+  bootstrapper '' # bootstrapper use in minikube
+  vm_driver '' # vm driver use in minikube (if empty, default: none)
+  user_name '' # user run minikube
 end
 ```
 
@@ -85,6 +106,7 @@ end
 - [gcloud](#gcloud): install or remove `google-cloud-sdk`.
 - [kubectl](#kubectl): install or remove `kubectl`.
 - [helm](#helm): install or remove `helm`.
+- [minikube](#minikube): install and run or remove `minikube`.
 
 ## Resources detail
 ## gcloud
@@ -99,7 +121,7 @@ Install `gcloud` with default version:
 gcloud 'install default gcloud' do
   action :install
   version ''
-  binary_path ''
+  path ''
 end
 ```
 
@@ -109,7 +131,7 @@ Install `gcloud` with specific version:
 gcloud 'install specific gcloud version' do
   action :install
   version '164.0.0'
-  binary_path ''
+  path ''
 end
 ```
 
@@ -125,7 +147,7 @@ end
 
 - `action` - `:install` to install `gcloud`, `:remove` to uninstall `gcloud`.
 - `version` - The desired version of `gcloud`.
-- `binary_path` - Application path (if empty, default:/usr/local/bin/gcloud)
+- `path` - Application path (if empty, default:/usr/local/bin).
 
 ## kubectl
 
@@ -139,7 +161,7 @@ Install `kubectl` with default version:
 kubectl 'install default kubectl' do
   action :install
   version ''
-  binary_path ''
+  path ''
 end
 ```
 
@@ -149,7 +171,7 @@ Install `kubectl` with specific version:
 kubectl 'install specific kubectl version' do
   action :install
   version 'v1.7.0'
-  binary_path ''
+  path ''
 end
 ```
 
@@ -164,7 +186,7 @@ end
 ### Properties
 - `action` - `:install` to install `kubectl`, `:remove` to uninstall `kubectl`.
 - `version` - The desired version of `kubectl`.
-- `binary_path` - Application path (if empty, default:/usr/local/bin/kubectl)
+- `path` - Application path (if empty, default:/usr/local/bin).
 
 ## helm
 
@@ -178,7 +200,7 @@ Install `helm` with default version:
 helm 'install default helm' do
   action :install
   version ''
-  binary_path ''
+  path ''
 end
 ```
 
@@ -188,7 +210,7 @@ Install `helm` with specific version:
 helm 'install specific helm version' do
   action :install
   version 'v2.4.2'
-  binary_path ''
+  path ''
 end
 ```
 
@@ -203,7 +225,50 @@ end
 ### Properties
 - `action` - `:install` to install `helm`, `:remove` to uninstall `helm`.
 - `version` - The desired version of `helm`.
-- `binary_path` - Application path (if empty, default:/usr/local/bin/helm)
+- `path` - Application path (if empty, default:/usr/local/bin).
+
+## minikube
+
+The `minikube` resource auto-install and run or auto-remove `minikube` with the provider resolution system.
+
+### Example
+
+Install and run `minikube`:
+
+```ruby
+minikube 'install minikube' do
+  action [:install, :run]
+  version 'v0.25.2'
+  path ''
+  k8s_version ''
+  network_plugin 'cni'
+  bootstrapper 'kubeadm'
+  vm_driver 'none'
+  user_name 'vagrant'
+end
+```
+
+Remove `minikube`:
+
+```ruby
+minikube 'remove minikube' do
+  user_name 'vagrant'
+  action :remove
+end
+```
+
+### Properties
+- `action` - `:install` to install `minikube`, `:remove` to uninstall `minikube`.
+- `version` - The desired version of `minikube`.
+- `k8s_version` - The desired version of `kubernetes resource`.
+- `path` - Application path (if empty, default:/usr/local/bin).
+- `network_plugin` - Network plugin.
+- `bootstrapper` - Bootstrapper.
+- `vm_driver` - Vm driver (if empty, default:none).
+- `user_name` - User run minikube cluster (Required).
+
+### Minikube require
+- You can read more at https://github.com/kubernetes/minikube.
 
 ## See more:
 

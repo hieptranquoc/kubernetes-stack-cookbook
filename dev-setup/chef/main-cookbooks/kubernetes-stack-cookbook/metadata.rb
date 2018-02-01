@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 name 'kubernetes-stack-cookbook'
 maintainer 'The Authors'
 maintainer_email 'you@example.com'
@@ -20,3 +21,4 @@ chef_version '>= 12.1' if respond_to?(:chef_version)
 # source_url 'https://github.com/<insert_org_here>/kubernetes-stack-cookbook'
 
 depends 'chef-dk'
+depends 'docker'

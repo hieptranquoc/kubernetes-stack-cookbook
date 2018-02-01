@@ -14,8 +14,7 @@
           "_id": "kubernetes-stack-cookbook-0",
           "key": "KITCHEN_LOCAL_YAML",
           "value": ".kitchen.dokken.yml",
-          "action": "add" // one of add, remove. Default: add.
-          // See more: https://github.com/customink-webops/magic_shell/blob/master/resources/environment.rb
+          "action": "add"
         }]
       }
     }

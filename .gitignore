@@ -1,4 +1,5 @@
 .DS_Store
+.idea
 .delivery/*
 !.delivery/project.toml
 .kitchen

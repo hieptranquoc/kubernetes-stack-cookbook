@@ -14,18 +14,20 @@ verifier:
 
 platforms:
   - name: ubuntu-16.04
-  - name: centos-7.3
+  - name: centos-7
 
 suites:
-  - name: smoke-install-default
+  - name: smoke-install
     run_list:
+      - recipe[kubernetes-stack-test::default]
       - recipe[kubernetes-stack-test::install]
     verifier:
       inspec_tests:
         - test/smoke/default/default_test.rb
-        - test/smoke/gcloud/gcloud_install_default_test.rb
-        - test/smoke/kubectl/kubectl_install_default_test.rb
-        - test/smoke/helm/helm_install_default_test.rb
+        - test/smoke/kubectl/kubectl_install_test.rb
+        - test/smoke/gcloud/gcloud_install_test.rb
+        - test/smoke/helm/helm_install_test.rb
+        - test/smoke/minikube/minikube_install_test.rb
     attributes:
       kubernetes-stack:
         kubectl:
@@ -37,36 +39,26 @@ suites:
         helm:
           enabled: true,
           version: ""
-
-  - name: smoke-install-specific-version
-    run_list:
-      - recipe[kubernetes-stack-test::install]
-    verifier:
-      inspec_tests:
-        - test/smoke/default/default_test.rb
-        - test/smoke/gcloud/gcloud_install_specific_version_test.rb
-        - test/smoke/kubectl/kubectl_install_specific_version_test.rb
-        - test/smoke/helm/helm_install_specific_version_test.rb
-    attributes:
-      kubernetes-stack:
-        kubectl:
+        minikube:
           enabled: true,
-          version: "v1.7.0"
-        gcloud:
-          enabled: true,
-          version: "158.0.0"
-        helm:
-          enabled: true,
-          version: "v2.4.2"
+          version: "v0.25.2"
+          k8s_version: ""
+          network_plugin: "cni"
+          bootstrapper: "kubeadm"
+          vm_driver: "none"
+          user_name: "vagrant"
 
   - name: smoke-uninstall
     run_list:
+      - recipe[kubernetes-stack-test::default]
       - recipe[kubernetes-stack-test::uninstall]
     verifier:
       inspec_tests:
+        - test/smoke/default/default_test.rb
         - test/smoke/gcloud/gcloud_uninstall_test.rb
-        - test/smoke/kubectl/kubectl_uninstall_test.rb
         - test/smoke/helm/helm_uninstall_test.rb
+        - test/smoke/kubectl/kubectl_uninstall_test.rb
+        - test/smoke/minikube/minikube_uninstall_test.rb
     attributes:
       kubernetes-stack:
         kubectl:
@@ -78,3 +70,11 @@ suites:
         helm:
           enabled: true,
           version: ""
+        minikube:
+          enabled: true,
+          version: "v0.25.2"
+          k8s_version: ""
+          network_plugin: "cni"
+          bootstrapper: "kubeadm"
+          vm_driver: "none"
+          user_name: "vagrant"

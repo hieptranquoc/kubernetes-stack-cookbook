@@ -9,31 +9,28 @@ addons:
     packages:
       - chefdk
 
+# Don't `bundle install` which takes about 1.5 mins
 install: echo "skip bundle install"
 
 services: docker
 
 env:
   matrix:
-    - INSTANCE=smoke-install-default-ubuntu-1604
-    - INSTANCE=smoke-install-default-centos-7
-    - INSTANCE=smoke-install-specific-version-ubuntu-1604
-    - INSTANCE=smoke-install-specific-version-centos-7
+    - INSTANCE=smoke-install-ubuntu-1604
+    - INSTANCE=smoke-install-centos-7
     - INSTANCE=smoke-uninstall-ubuntu-1604
     - INSTANCE=smoke-uninstall-centos-7
 
-# Ensure we make ChefDK's Ruby the default
 before_script:
   - sudo iptables -L DOCKER || ( echo "DOCKER iptables chain missing" ; sudo iptables -N DOCKER )
   - eval "$(/opt/chefdk/bin/chef shell-init bash)"
   - chef gem install kitchen-dokken
+  - eval "$(/opt/chefdk/bin/chef shell-init bash)"
 
 script: KITCHEN_LOCAL_YAML=.kitchen.dokken.yml /opt/chefdk/embedded/bin/kitchen verify ${INSTANCE}
 
 matrix:
   include:
-    - before_script:
-      - eval "$(/opt/chefdk/bin/chef shell-init bash)"
     - script:
       - /opt/chefdk/embedded/bin/chef --version
       - /opt/chefdk/embedded/bin/cookstyle --version

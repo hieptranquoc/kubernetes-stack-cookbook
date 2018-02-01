@@ -1,5 +1,8 @@
 # The MIT License (MIT)
 #
+# Cookbook:: kubernetes-stack
+# Attribute:: default
+#
 # Copyright:: 2017, Teracy Corporation
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,3 +22,6 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
+
+default['docker_machine']['version'] = 'v0.14.0'
+default['docker_machine']['command_path'] = '/usr/local/bin'
