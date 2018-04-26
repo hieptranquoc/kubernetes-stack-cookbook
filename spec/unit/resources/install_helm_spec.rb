@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 #
 # Cookbook:: kubernetes-stack
 # Spec:: helm
@@ -26,9 +27,15 @@
 
 require 'spec_helper'
 
-describe 'kubernetes-stack-test::helm_install_default' do
-  context 'When all attributes are default, on ubuntu 16.04' do
-    let(:chef_run) { ChefSpec::SoloRunner.new(step_into: 'helm', platform: 'ubuntu', version: '16.04').converge(described_recipe) }
+describe 'kubernetes-stack-test::install_helm_for_chefspec' do
+  context 'Install on ubuntu 16.04' do
+    cached(:chef_run) do
+      ChefSpec::SoloRunner.new(
+        step_into: 'helm',
+        platform: 'ubuntu',
+        version: '16.04'
+      ).converge(described_recipe)
+    end
 
     before do
       stub_command('which helm').and_return('/usr/local/bin/helm')
@@ -40,12 +47,18 @@ describe 'kubernetes-stack-test::helm_install_default' do
     end
 
     it 'install helm' do
-      expect(chef_run).to install_helm('install helm')
+      expect(chef_run).to install_helm('install helm').with(version: 'v2.4.2')
     end
   end
 
-  context 'When all attributes are default, on centos 7.3' do
-    let(:chef_run) { ChefSpec::SoloRunner.new(step_into: 'helm', platform: 'centos', version: '7.3.1611').converge(described_recipe) }
+  context 'Install on centos 7.3' do
+    cached(:chef_run) do
+      ChefSpec::SoloRunner.new(
+        step_into: 'helm',
+        platform: 'centos',
+        version: '7.3.1611'
+      ).converge(described_recipe)
+    end
 
     before do
       stub_command('which helm').and_return('/usr/local/bin/helm')
@@ -57,7 +70,7 @@ describe 'kubernetes-stack-test::helm_install_default' do
     end
 
     it 'install helm' do
-      expect(chef_run).to install_helm('install helm')
+      expect(chef_run).to install_helm('install helm').with(version: 'v2.4.2')
     end
   end
 end

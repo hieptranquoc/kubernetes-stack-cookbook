@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 #
 # Cookbook:: kubernetes-stack
 # Spec:: default
@@ -26,11 +27,26 @@
 
 require 'spec_helper'
 
-describe 'kubernetes-stack::default' do
-  context 'When all attributes are default, on ubuntu 16.04' do
-    let(:chef_run) do
-      runner = ChefSpec::SoloRunner.new(platform: 'ubuntu', version: '16.04')
-      runner.converge(described_recipe)
+describe 'kubernetes-stack-test::default' do
+  context 'ubuntu 16.04' do
+    cached(:chef_run) do
+      ChefSpec::ServerRunner.new(
+        platform: 'ubuntu',
+        version: '16.04'
+      ).converge(described_recipe)
+    end
+
+    it 'converges successfully' do
+      expect { chef_run }.to_not raise_error
+    end
+  end
+
+  context 'centos 7.3' do
+    cached(:chef_run) do
+      ChefSpec::ServerRunner.new(
+        platform: 'centos',
+        version: '7.3.1611'
+      ).converge(described_recipe)
     end
 
     it 'converges successfully' do

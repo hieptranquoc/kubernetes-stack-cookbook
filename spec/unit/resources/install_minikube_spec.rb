@@ -1,6 +1,7 @@
+# frozen_string_literal: true
 #
 # Cookbook:: kubernetes-stack
-# Spec:: kubectl
+# Spec:: minikube
 #
 # The MIT License (MIT)
 #
@@ -26,38 +27,56 @@
 
 require 'spec_helper'
 
-describe 'kubernetes-stack-test::kubectl_install_default' do
-  context 'When all attributes are default, on ubuntu 16.04' do
-    let(:chef_run) { ChefSpec::SoloRunner.new(step_into: 'kubectl', platform: 'ubuntu', version: '16.04').converge(described_recipe) }
+describe 'kubernetes-stack-test::install_minikube_for_chefspec' do
+  context 'Install on ubuntu 16.04' do
+    cached(:chef_run) do
+      ChefSpec::SoloRunner.new(
+        step_into: 'minikube',
+        platform: 'ubuntu',
+        version: '16.04'
+      ).converge(described_recipe)
+    end
 
     before do
       stub_command('which kubectl').and_return('/usr/local/bin/kubectl')
-      stub_command('test -f /etc/bash_completion.d/kubectl').and_return(true)
+      stub_command('which minikube').and_return('/usr/local/bin/minikube')
+      stub_command('which docker').and_return('/usr/bin/docker')
+      stub_command('which sudo').and_return('/usr/bin/sudo')
+      stub_command('grep vagrant /etc/passwd').and_return(true)
     end
 
     it 'converges successfully' do
       expect { chef_run }.to_not raise_error
     end
 
-    it 'install kubectl' do
-      expect(chef_run).to install_kubectl('install default kubectl')
+    it 'install minikube' do
+      expect(chef_run).to install_minikube('install minikube')
     end
   end
 
-  context 'When all attributes are default, on centos 7.3' do
-    let(:chef_run) { ChefSpec::SoloRunner.new(step_into: 'kubectl', platform: 'centos', version: '7.3.1611').converge(described_recipe) }
+  context 'Install on centos 7' do
+    cached(:chef_run) do
+      ChefSpec::SoloRunner.new(
+        step_into: 'minikube',
+        platform: 'centos',
+        version: '7.3.1611'
+      ).converge(described_recipe)
+    end
 
     before do
       stub_command('which kubectl').and_return('/usr/local/bin/kubectl')
-      stub_command('test -f /etc/bash_completion.d/kubectl').and_return(true)
+      stub_command('which minikube').and_return('/usr/local/bin/minikube')
+      stub_command('which docker').and_return('/usr/bin/docker')
+      stub_command('which sudo').and_return('/usr/bin/sudo')
+      stub_command('grep vagrant /etc/passwd').and_return(true)
     end
 
     it 'converges successfully' do
       expect { chef_run }.to_not raise_error
     end
 
-    it 'install kubectl' do
-      expect(chef_run).to install_kubectl('install default kubectl')
+    it 'install minikube' do
+      expect(chef_run).to install_minikube('install minikube')
     end
   end
 end

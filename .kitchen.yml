@@ -14,147 +14,65 @@ verifier:
 
 platforms:
   - name: ubuntu-16.04
-  - name: centos-7.3
+  # - name: centos-7
 
 suites:
-  - name: smoke-default
+  - name: smoke-install
     run_list:
       - recipe[kubernetes-stack-test::default]
+      - recipe[kubernetes-stack-test::install]
     verifier:
       inspec_tests:
-        - test/smoke/default
-
-  - name: smoke-kubectl-default
-    run_list:
-      - recipe[kubernetes-stack-test::kubectl_install_default]
-      - recipe[kubernetes-stack-test::kubectl_install_specific_version]
-    verifier:
-      inspec_tests:
-        - test/smoke/kubectl/kubectl_default_test.rb
+        - test/smoke/default/default_test.rb
+        - test/smoke/kubectl/kubectl_install_test.rb
+        - test/smoke/gcloud/gcloud_install_test.rb
+        - test/smoke/helm/helm_install_test.rb
+        - test/smoke/minikube/minikube_install_test.rb
     attributes:
       kubernetes-stack:
         kubectl:
-          enabled: true
-
-  - name: smoke-kubectl
-    run_list:
-      - recipe[kubernetes-stack-test::kubectl_install_default]
-    verifier:
-      inspec_tests:
-        - test/smoke/kubectl/kubectl_test.rb
-    attributes:
-      kubernetes-stack:
-        kubectl:
-          enabled: true
-
-  - name: smoke-kubectl-specific-version
-    run_list:
-      - recipe[kubernetes-stack-test::kubectl_install_specific_version]
-    verifier:
-      inspec_tests:
-        - test/smoke/kubectl/kubectl_specific_version_test.rb
-    attributes:
-      kubernetes-stack:
-        kubectl:
-          enabled: true
-
-  - name: smoke-kubectl-uninstall
-    run_list:
-      - recipe[kubernetes-stack-test::kubectl_uninstall]
-    verifier:
-      inspec_tests:
-        - test/smoke/kubectl/kubectl_uninstall_test.rb
-    attributes:
-      kubernetes-stack:
-        kubectl:
-          enabled: true
-
-  - name: smoke-helm-default
-    run_list:
-      - recipe[kubernetes-stack-test::helm_install_default]
-      - recipe[kubernetes-stack-test::helm_install_specific_version]
-    verifier:
-      inspec_tests:
-        - test/smoke/helm/helm_default_test.rb
-    attributes:
-      kubernetes-stack:
-        helm:
-          enabled: true
-
-  - name: smoke-helm
-    run_list:
-      - recipe[kubernetes-stack-test::helm_install_default]
-    verifier:
-      inspec_tests:
-        - test/smoke/helm/helm_test.rb
-    attributes:
-      kubernetes-stack:
-        helm:
-          enabled: true
-
-  - name: smoke-helm-specific-version
-    run_list:
-      - recipe[kubernetes-stack-test::helm_install_specific_version]
-    verifier:
-      inspec_tests:
-        - test/smoke/helm/helm_specific_version_test.rb
-    attributes:
-      kubernetes-stack:
-        helm:
-          enabled: true
-
-  - name: smoke-helm-uninstall
-    run_list:
-      - recipe[kubernetes-stack-test::helm_uninstall]
-    verifier:
-      inspec_tests:
-        - test/smoke/helm/helm_uninstall_test.rb
-    attributes:
-      kubernetes-stack:
-        helm:
-          enabled: true
-
-  - name: smoke-gcloud-default
-    run_list:
-      - recipe[kubernetes-stack-test::gcloud_install_default]
-      - recipe[kubernetes-stack-test::gcloud_install_specific_version]
-    verifier:
-      inspec_tests:
-        - test/smoke/gcloud/gcloud_default_test.rb
-    attributes:
-      kubernetes-stack:
+          enabled: true,
+          version: ""
         gcloud:
-          enabled: true
+          enabled: true,
+          version: ""
+        helm:
+          enabled: true,
+          version: ""
+        minikube:
+          enabled: true,
+          version: "v0.25.2"
+          k8s_version: ""
+          network_plugin: "cni"
+          bootstrapper: "kubeadm"
+          vm_driver: "none"
 
-  - name: smoke-gcloud
+  - name: smoke-uninstall
     run_list:
-      - recipe[kubernetes-stack-test::gcloud_install_default]
+      - recipe[kubernetes-stack-test::default]
+      - recipe[kubernetes-stack-test::uninstall]
     verifier:
       inspec_tests:
-        - test/smoke/gcloud/gcloud_test.rb
-    attributes:
-      kubernetes-stack:
-        gcloud:
-          enabled: true
-
-  - name: smoke-gcloud-specific-version
-    run_list:
-      - recipe[kubernetes-stack-test::gcloud_install_specific_version]
-    verifier:
-      inspec_tests:
-        - test/smoke/gcloud/gcloud_specific_version_test.rb
-    attributes:
-      kubernetes-stack:
-        gcloud:
-          enabled: true
-
-  - name: smoke-gcloud-uninstall
-    run_list:
-      - recipe[kubernetes-stack-test::gcloud_uninstall]
-    verifier:
-      inspec_tests:
+        - test/smoke/default/default_test.rb
         - test/smoke/gcloud/gcloud_uninstall_test.rb
+        - test/smoke/helm/helm_uninstall_test.rb
+        - test/smoke/kubectl/kubectl_uninstall_test.rb
+        - test/smoke/minikube/minikube_uninstall_test.rb
     attributes:
       kubernetes-stack:
+        kubectl:
+          enabled: true,
+          version: ""
         gcloud:
-          enabled: true
+          enabled: true,
+          version: ""
+        helm:
+          enabled: true,
+          version: ""
+        minikube:
+          enabled: true,
+          version: "v0.25.2"
+          k8s_version: ""
+          network_plugin: "cni"
+          bootstrapper: "kubeadm"
+          vm_driver: "none"

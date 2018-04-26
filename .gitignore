@@ -2,3 +2,6 @@
 .delivery/*
 !.delivery/project.toml
 .kitchen
+.chef/*
+!.gitkeep
+!.chef/knife.rb

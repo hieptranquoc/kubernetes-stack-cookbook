@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 #
 # Cookbook:: kubernetes-stack
 # Spec:: kubectl
@@ -26,40 +27,50 @@
 
 require 'spec_helper'
 
-describe 'kubernetes-stack-test::gcloud_install_default' do
-  context 'When all attributes are default, on ubuntu 16.04' do
-    let(:chef_run) { ChefSpec::SoloRunner.new(step_into: 'gcloud', platform: 'ubuntu', version: '16.04').converge(described_recipe) }
+describe 'kubernetes-stack-test::install_kubectl_for_chefspec' do
+  context 'Install on ubuntu 16.04' do
+    cached(:chef_run) do
+      ChefSpec::SoloRunner.new(
+        step_into: 'kubectl',
+        platform: 'ubuntu',
+        version: '16.04'
+      ).converge(described_recipe)
+    end
 
     before do
-      stub_command('which gcloud').and_return('/usr/local/bin/gcloud')
-      stub_command('which python').and_return('/usr/bin/python')
-      stub_command('test -f /usr/lib/google-cloud-sdk/bin/gcloud').and_return(true)
+      stub_command('which kubectl').and_return('/usr/local/bin/kubectl')
+      stub_command('test -f /etc/bash_completion.d/kubectl').and_return(true)
     end
 
     it 'converges successfully' do
       expect { chef_run }.to_not raise_error
     end
 
-    it 'install gcloud' do
-      expect(chef_run).to install_gcloud('install default gcloud')
+    it 'install kubectl' do
+      expect(chef_run).to install_kubectl('install kubectl').with(version: 'v1.9.1')
     end
   end
 
-  context 'When all attributes are default, on centos 7.3' do
-    let(:chef_run) { ChefSpec::SoloRunner.new(step_into: 'gcloud', platform: 'centos', version: '7.3.1611').converge(described_recipe) }
+  context 'Install on centos 7.3' do
+    cached(:chef_run) do
+      ChefSpec::SoloRunner.new(
+        step_into: 'kubectl',
+        platform: 'centos',
+        version: '7.3.1611'
+      ).converge(described_recipe)
+    end
 
     before do
-      stub_command('which gcloud').and_return('/usr/local/bin/gcloud')
-      stub_command('which python').and_return('/usr/bin/python')
-      stub_command('test -f /usr/lib/google-cloud-sdk/bin/gcloud').and_return('true')
+      stub_command('which kubectl').and_return('/usr/local/bin/kubectl')
+      stub_command('test -f /etc/bash_completion.d/kubectl').and_return(true)
     end
 
     it 'converges successfully' do
       expect { chef_run }.to_not raise_error
     end
 
-    it 'install gcloud' do
-      expect(chef_run).to install_gcloud('install default gcloud')
+    it 'install kubectl' do
+      expect(chef_run).to install_kubectl('install kubectl').with(version: 'v1.9.1')
     end
   end
 end
